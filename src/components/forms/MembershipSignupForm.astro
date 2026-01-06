@@ -28,7 +28,13 @@ import { pricingData } from '@data/pricing';
     <div class="plan-meta" id="inline-plan-meta"></div>
   </div>
 
-  <form id="membership-form">
+  <form id="membership-form" action="https://api.web3forms.com/submit" method="POST">
+    <!-- Web3Forms Configuration -->
+    <input type="hidden" name="access_key" value="7b91d16e-72f3-4c0e-a8cd-b6b9231807da" />
+    <input type="hidden" name="redirect" value="/signup-success" />
+    <input type="hidden" name="subject" value="Nieuwe Inschrijving - FitCity Culemborg" />
+    <input type="hidden" name="from_name" value="FitCity Culemborg Website" />
+
     <!-- Selected membership (will be populated by JS) -->
     <input type="hidden" name="membership_id" id="selected-membership-id" />
     <input type="hidden" name="membership_name" id="selected-membership-name" />
@@ -601,78 +607,26 @@ import { pricingData } from '@data/pricing';
   });
 
   // Form submission
-  document.getElementById('membership-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); // Prevent default form submission
-
+  document.getElementById('membership-form')?.addEventListener('submit', (e) => {
     const form = e.target as HTMLFormElement;
     const ibanInput = document.getElementById('iban') as HTMLInputElement;
     const iban = ibanInput.value.replace(/\s/g, '');
 
     // Final IBAN validation before submit
     if (!validateIBAN(iban)) {
+      e.preventDefault();
       ibanInput.setCustomValidity('Voer een geldig IBAN nummer in');
       ibanInput.reportValidity();
       return false;
     }
 
-    const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
-    const originalText = submitBtn?.textContent || '';
-
+    // Show loading state
+    const submitBtn = nextBtn;
     if (submitBtn) {
       submitBtn.textContent = 'BEZIG MET VERZENDEN...';
       submitBtn.disabled = true;
     }
 
-    try {
-      // Collect form data
-      const formData = new FormData(form);
-      const data: Record<string, any> = {};
-
-      formData.forEach((value, key) => {
-        // Skip honeypot
-        if (key === 'botcheck') return;
-
-        // Convert checkbox values to boolean
-        if (key.includes('consent')) {
-          data[key] = value === 'on';
-        } else {
-          data[key] = value;
-        }
-      });
-
-      // Send to API
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Er is een fout opgetreden');
-      }
-
-      // Success - redirect to success page
-      window.location.href = '/signup-success';
-
-    } catch (error) {
-      console.error('Signup error:', error);
-
-      // Show error message
-      alert(
-        error instanceof Error
-          ? error.message
-          : 'Er is een fout opgetreden bij het versturen van je aanmelding. Probeer het later opnieuw.'
-      );
-
-      // Re-enable submit button
-      if (submitBtn) {
-        submitBtn.textContent = originalText;
-        submitBtn.disabled = false;
-      }
-    }
+    // Form will submit naturally to Web3Forms
   });
 </script>
