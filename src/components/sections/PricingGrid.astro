@@ -1,44 +1,176 @@
 ---
 import PricingCard from './PricingCard.astro';
 import Container from '@components/ui/Container.astro';
-import type { PricingCardData } from '@data/pricing';
+import { pricingData } from '@data/pricing';
 
 interface Props {
-  cards: PricingCardData[];
   highlightedId?: string;
+  category?: 'all' | 'main' | 'ladies' | 'kickboxing';
 }
 
-const { cards, highlightedId } = Astro.props;
+const { highlightedId, category = 'all' } = Astro.props;
+
+const allCards = [
+  ...pricingData.main.map(c => ({ 
+    ...c, 
+    theme: 'default' as const, 
+    category: 'main',
+    icons: (c.id === 'ultimate-fit' ? ['fitness', 'kickboxing'] : ['fitness']) as ('fitness' | 'ladies' | 'kickboxing')[]
+  })),
+  ...pricingData.ladies.map(c => ({ 
+    ...c, 
+    theme: 'ladies' as const, 
+    category: 'ladies',
+    icons: ['ladies'] as ('fitness' | 'ladies' | 'kickboxing')[]
+  })),
+  ...pricingData.kickboxing.map(c => ({ 
+    ...c, 
+    theme: 'kickboxing' as const, 
+    category: 'kickboxing',
+    icons: ['kickboxing'] as ('fitness' | 'ladies' | 'kickboxing')[]
+  }))
+];
+
+const displayedCards = category === 'all' 
+  ? allCards 
+  : category === 'kickboxing'
+    ? allCards.filter(c => c.category === 'kickboxing' || c.icons.includes('kickboxing'))
+    : allCards.filter(c => c.category === category);
 ---
 
 <Container size="wide">
-  <!-- Mobile: Horizontal Scroll -->
-  <div class="md:hidden overflow-x-auto pb-4 -mx-4 px-4">
-    <div class="flex gap-4 snap-x snap-mandatory">
-      {cards.map((card) => (
-        <div class="min-w-[280px] snap-center">
+  <!-- Duration Toggle (Only show if we have mixed content or meaningful choices) -->
+  {category === 'all' && (
+      <div class="flex justify-center mb-12">
+        <div class="pricing-toggle bg-bg-secondary p-1 rounded-full border border-white/10 relative inline-flex">
+          <div class="pricing-slider absolute top-1 bottom-1 left-1 bg-primary rounded-full transition-all duration-300 z-0"></div>
+          <button class="pricing-btn active px-6 py-2 rounded-full text-sm font-bold text-bg-main relative z-10 transition-colors cursor-pointer" data-view="12m">Jaar</button>
+          <button class="pricing-btn px-6 py-2 rounded-full text-sm font-bold text-text-muted relative z-10 transition-colors cursor-pointer" data-view="6m">Halfjaar</button>
+          <button class="pricing-btn px-6 py-2 rounded-full text-sm font-bold text-text-muted relative z-10 transition-colors cursor-pointer" data-view="flex">Flex</button>
+        </div>
+      </div>
+  )}
+
+  {category === 'all' ? (
+    <>
+      <!-- 12 Months View -->
+      <div id="grid-12m" class="pricing-view grid md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-100 transition-opacity duration-300">
+        {displayedCards.filter(c => c.term === '12 maanden').map((card) => (
           <PricingCard
+            id={card.id}
             name={card.name}
             price={card.price}
             term={card.term}
             features={card.features}
             isHighlighted={card.id === highlightedId}
+            theme={card.theme}
+            icons={card.icons}
           />
-        </div>
+        ))}
+      </div>
+
+      <!-- 6 Months View -->
+      <div id="grid-6m" class="pricing-view hidden grid md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-0 transition-opacity duration-300">
+        {displayedCards.filter(c => c.term === '6 maanden').map((card) => (
+          <PricingCard
+            id={card.id}
+            name={card.name}
+            price={card.price}
+            term={card.term}
+            features={card.features}
+            isHighlighted={card.id === highlightedId}
+            theme={card.theme}
+            icons={card.icons}
+          />
+        ))}
+      </div>
+
+      <!-- Flex View -->
+      <div id="grid-flex" class="pricing-view hidden grid md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-0 transition-opacity duration-300">
+        {displayedCards.filter(c => c.term === 'Maandelijks' || c.term === '3 maanden').map((card) => (
+          <PricingCard
+            id={card.id}
+            name={card.name}
+            price={card.price}
+            term={card.term}
+            features={card.features}
+            isHighlighted={card.id === highlightedId}
+            theme={card.theme}
+            icons={card.icons}
+          />
+        ))}
+      </div>
+    </>
+  ) : (
+    <!-- Single Grid for Specific Categories (Ladies/Kickboxing) -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {displayedCards.map((card) => (
+        <PricingCard
+          id={card.id}
+          name={card.name}
+          price={card.price}
+          term={card.term}
+          features={card.features}
+          isHighlighted={card.id === highlightedId}
+          theme={card.theme}
+          icons={card.icons}
+        />
       ))}
     </div>
-  </div>
-
-  <!-- Desktop: Grid -->
-  <div class="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {cards.map((card) => (
-      <PricingCard
-        name={card.name}
-        price={card.price}
-        term={card.term}
-        features={card.features}
-        isHighlighted={card.id === highlightedId}
-      />
-    ))}
-  </div>
+  )}
 </Container>
+
+<script>
+  function setupPricingToggle() {
+    const btns = document.querySelectorAll('.pricing-btn');
+    const views = document.querySelectorAll('.pricing-view');
+    const slider = document.querySelector('.pricing-slider') as HTMLElement;
+
+    if (!slider || btns.length === 0) return;
+
+    // Initialize slide position
+    const updateSlider = (activeBtn: HTMLElement) => {
+      slider.style.width = `${activeBtn.offsetWidth}px`;
+      slider.style.transform = `translateX(${activeBtn.offsetLeft - 4}px)`; // -4 for parent padding offset
+    };
+
+    // Initial set (first button is active by default)
+    const initialBtn = document.querySelector('.pricing-btn.active') as HTMLElement;
+    if (initialBtn) {
+        // Wait a tick for layout
+        setTimeout(() => updateSlider(initialBtn), 50);
+    }
+
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update Buttons
+        btns.forEach(b => {
+            b.classList.remove('active', 'text-bg-main');
+            b.classList.add('text-text-muted');
+        });
+        btn.classList.add('active', 'text-bg-main');
+        btn.classList.remove('text-text-muted');
+
+        // Update Slider
+        updateSlider(btn as HTMLElement);
+
+        // Update Views
+        const target = (btn as HTMLElement).dataset.view;
+        views.forEach(view => {
+          if (view.id === `grid-${target}`) {
+            view.classList.remove('hidden');
+            // Small timeout for fade in
+            setTimeout(() => view.classList.remove('opacity-0'), 10);
+          } else {
+            view.classList.add('opacity-0');
+            setTimeout(() => view.classList.add('hidden'), 300);
+          }
+        });
+      });
+    });
+  }
+
+  // Run on load and view transitions
+  setupPricingToggle();
+  document.addEventListener('astro:page-load', setupPricingToggle);
+</script>

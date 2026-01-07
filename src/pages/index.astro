@@ -9,7 +9,7 @@ import SectionHeading from '@components/ui/SectionHeading.astro';
 import Container from '@components/ui/Container.astro';
 import FAQSchema from '@components/seo/FAQSchema.astro';
 
-import { pricingData } from '@data/pricing';
+
 import { uspData } from '@data/usps';
 import { faqData } from '@data/faq';
 ---
@@ -36,11 +36,9 @@ import { faqData } from '@data/faq';
     <Container>
       <SectionHeading
         title="Prijzen"
-        subtitle="Transparante prijzen, geen verborgen kosten. Alle abonnementen incl. €17,00 inschrijfgeld."
       />
     </Container>
     <PricingGrid
-      cards={pricingData.main}
       highlightedId="smart-deal"
     />
   </section>

@@ -4,7 +4,11 @@ interface Props {
   price: string;
   term: string;
   features: string[];
+  id?: string;
   isHighlighted?: boolean;
+  theme?: 'default' | 'ladies' | 'kickboxing';
+  subtitle?: string;
+  icons?: ('fitness' | 'ladies' | 'kickboxing')[];
 }
 
 const {
@@ -12,25 +16,71 @@ const {
   price,
   term,
   features,
-  isHighlighted = false
+  id,
+  isHighlighted = false,
+  theme = 'default',
+  subtitle = '€17,00 inschrijfkosten',
+  icons = []
 } = Astro.props;
+
+
+
+
+
+// Better Icons (Using FontAwesome-like paths or simple custom ones)
+const iconsMap = {
+  fitness: {
+    // Multi-plate dumbbell matching user image (Handle + Inner Plate + Outer Plate)
+    path: "M8.5 11h7v2h-7z M6 6.5c0-.83.67-1.5 1.5-1.5S9 5.67 9 6.5v11c0 .83-.67 1.5-1.5 1.5S6 18.33 6 17.5v-11z M15 6.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v11c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5v-11z M3 8h2v8H3z M19 8h2v8h-2z M1 10h1v4H1z M22 10h1v4h-1z",
+    viewBox: "0 0 24 24",
+    color: "text-primary"
+  },
+  ladies: {
+    path: "M8.5 11h7v2h-7z M6 6.5c0-.83.67-1.5 1.5-1.5S9 5.67 9 6.5v11c0 .83-.67 1.5-1.5 1.5S6 18.33 6 17.5v-11z M15 6.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v11c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5v-11z M3 8h2v8H3z M19 8h2v8h-2z M1 10h1v4H1z M22 10h1v4h-1z", // Same Dumbbell
+    viewBox: "0 0 24 24",
+    color: "text-[#FF2E93]"
+  },
+  kickboxing: {
+    img: "/icons/kickboxing.png",
+    color: "" // Image has own color
+  }
+};
 ---
 
 <div
   class:list={[
-    'card-industrial p-6 md:p-8 flex flex-col h-full',
-    isHighlighted && 'border-2 border-primary'
+    'relative card-industrial p-6 md:p-8 flex flex-col h-full',
+    isHighlighted && theme === 'ladies' ? 'border-2 border-[#FF2E93]' :
+    isHighlighted && theme === 'kickboxing' ? 'border-2 border-[#FF5722]' :
+    isHighlighted ? 'border-2 border-primary' : ''
   ]}
 >
   {isHighlighted && (
-    <div class="inline-flex items-center gap-2 px-3 py-1 bg-primary text-black text-xs font-bold uppercase mb-4 self-start">
-      ⭐ AANBEVOLEN
+    <div class="absolute top-0 right-0 px-4 py-1 bg-primary text-black text-xs font-bold uppercase z-20">
+      Beste deal
     </div>
   )}
 
-  <h3 class="font-display text-xl md:text-2xl mb-2">
-    {name}
-  </h3>
+  <div class="flex justify-between items-start mb-2">
+    <h3 class="font-display text-xl md:text-2xl max-w-[70%]">
+      {name}
+    </h3>
+    
+    <!-- Category Icons -->
+    <div class="flex items-center gap-2">
+      {icons.map(icon => (
+        <div class={`flex items-center justify-center ${iconsMap[icon]?.color || 'text-primary'}`} title={icon}>
+           {iconsMap[icon]?.img ? (
+             <img src={iconsMap[icon].img} alt={icon} class="w-8 h-8 object-contain" />
+           ) : (
+             <svg class="w-8 h-8" fill="currentColor" viewBox={iconsMap[icon]?.viewBox || "0 0 24 24"}>
+               <path d={iconsMap[icon]?.path || ""} />
+             </svg>
+           )}
+        </div>
+      ))}
+    </div>
+  </div>
 
   <div class="mb-6">
     <div class="flex items-baseline gap-2">
@@ -39,7 +89,7 @@ const {
       </span>
       <span class="text-text-muted text-lg">/maand</span>
     </div>
-    <p class="text-text-muted text-sm mt-1">{term}</p>
+    <p class="text-text-muted text-sm mt-1">{subtitle}</p>
   </div>
 
   <ul class="space-y-3 mb-8 flex-grow">
@@ -53,7 +103,9 @@ const {
     ))}
   </ul>
 
-  <a href="/signup" class="btn-primary w-full text-center">
-    WORD NU LID
-  </a>
+  <slot>
+    <a href={`/signup${id ? `?plan=${id}` : ''}`} class="btn-primary w-full text-center">
+      KIES {name.toUpperCase()}
+    </a>
+  </slot>
 </div>

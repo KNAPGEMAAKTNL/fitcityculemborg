@@ -38,7 +38,7 @@ export const pricingData = {
     },
     {
       id: 'maand-flex',
-      name: 'Maand Flex',
+      name: 'Flex',
       price: '37,00',
       term: 'Maandelijks',
       features: ['Onbeperkt fitness', 'Opzeggen wanneer je wilt*'],

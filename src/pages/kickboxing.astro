@@ -3,12 +3,10 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import SectionHeading from '@components/ui/SectionHeading.astro';
 import Container from '@components/ui/Container.astro';
 import ScheduleTable from '@components/sections/ScheduleTable.astro';
-import PricingCard from '@components/sections/PricingCard.astro';
+import PricingGrid from '@components/sections/PricingGrid.astro';
 import PhotoGallery from '@components/sections/PhotoGallery.astro';
 
-import { kickboxingSchedule, pricingData } from '@data/pricing';
-
-const ultimateFit = pricingData.main.find(p => p.id === 'ultimate-fit');
+import { kickboxingSchedule } from '@data/pricing';
 
 const kickboxingImages = [
   '/images/kickboxen-1.jpeg',
@@ -105,25 +103,10 @@ const kickboxingImages = [
         title="Kickboxing Prijzen"
         subtitle="Kies het abonnement dat bij jou past"
       />
-      <div class="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {pricingData.kickboxing.map((pricing) => (
-          <PricingCard
-            name={pricing.name}
-            price={pricing.price}
-            term={pricing.term}
-            features={pricing.features}
-          />
-        ))}
-        {ultimateFit && (
-          <PricingCard
-            name={ultimateFit.name}
-            price={ultimateFit.price}
-            term={ultimateFit.term}
-            features={ultimateFit.features}
-            isHighlighted={true}
-          />
-        )}
-      </div>
     </Container>
+    <PricingGrid
+      category="kickboxing"
+      highlightedId="ultimate-fit"
+    />
   </section>
 </BaseLayout>

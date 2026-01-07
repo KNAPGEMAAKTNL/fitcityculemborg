@@ -46,7 +46,12 @@
     color: var(--color-text-main);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-display);
     text-transform: uppercase;
     font-weight: 700;
@@ -62,12 +67,20 @@
   --shadow-card-hover: 6px 6px 0px 0px #FF2E93;
 }
 
+/* Theme variants for Kickboxing */
+[data-theme="kickboxing"] {
+  --color-primary: #FF5722;
+  --color-primary-hover: #E64A19;
+  --shadow-card-hover: 6px 6px 0px 0px #FF5722;
+}
+
 /* Component utilities */
 @layer components {
   .btn-primary {
     @apply bg-primary text-black font-display uppercase font-bold px-8 py-4 rounded-none;
     box-shadow: var(--shadow-button);
     transition: all 0.15s ease;
+    cursor: pointer;
   }
 
   .btn-primary:hover {
@@ -79,6 +92,7 @@
   .btn-ghost {
     @apply border-2 border-white text-white font-display uppercase font-bold px-8 py-4 rounded-none bg-transparent;
     transition: all 0.15s ease;
+    cursor: pointer;
   }
 
   .btn-ghost:hover {

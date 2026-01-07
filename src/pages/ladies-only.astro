@@ -6,7 +6,7 @@ import SectionHeading from '@components/ui/SectionHeading.astro';
 import Container from '@components/ui/Container.astro';
 import USPCard from '@components/sections/USPCard.astro';
 
-import { pricingData } from '@data/pricing';
+
 ---
 
 <BaseLayout
@@ -74,7 +74,7 @@ import { pricingData } from '@data/pricing';
       />
     </Container>
     <PricingGrid
-      cards={pricingData.ladies}
+      category="ladies"
       highlightedId="ladies-jaar"
     />
   </section>

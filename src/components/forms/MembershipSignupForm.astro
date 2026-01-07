@@ -1,632 +1,1337 @@
 ---
 import { pricingData } from '@data/pricing';
+import PricingCard from '@components/sections/PricingCard.astro';
+
+const allPricing = {
+    '12m': [
+        ...pricingData.main.filter(p => p.term === '12 maanden'),
+        ...pricingData.ladies.filter(p => p.term === '12 maanden'),
+        ...pricingData.kickboxing.filter(p => p.term === '12 maanden')
+    ],
+    '6m': [
+        ...pricingData.main.filter(p => p.term === '6 maanden'),
+        ...pricingData.ladies.filter(p => p.term === '6 maanden')
+    ],
+    'flex': [
+        ...pricingData.main.filter(p => p.term === 'Maandelijks' || p.term === '3 maanden'),
+        ...pricingData.ladies.filter(p => p.term === 'Maandelijks')
+    ]
+};
+
+function formatButtonText(name: string) {
+  const cleanName = name.replace(/DEAL/i, '').replace(/ONLY/i, '').trim();
+  return `KIES ${cleanName.toUpperCase()}`;
+}
+
+function getIcons(id: string) {
+  if (id === 'ultimate-fit') return ['fitness', 'kickboxing'];
+  if (id.includes('ladies')) return ['ladies'];
+  if (id.includes('kb')) return ['kickboxing'];
+  return ['fitness'];
+}
 ---
 
-<div class="membership-signup-form">
-  <!-- Step header with navigation -->
-  <div class="step-header">
-    <button type="button" class="btn-ghost step-nav" id="step-back">TERUG</button>
-    <div class="flex items-center justify-center gap-2 step-progress">
-      <div class="step-indicator active" data-step="1">
-        <span>1</span>
-      </div>
-      <div class="h-0.5 w-12 bg-text-muted/30 step-line" data-line="1"></div>
-      <div class="step-indicator" data-step="2">
-        <span>2</span>
-      </div>
-      <div class="h-0.5 w-12 bg-text-muted/30 step-line" data-line="2"></div>
-      <div class="step-indicator" data-step="3">
-        <span>3</span>
-      </div>
-    </div>
-    <button type="button" class="btn-primary step-nav" id="step-next" disabled>VOLGENDE STAP</button>
-  </div>
-
-  <div class="selected-plan-inline" id="selected-plan-inline" hidden>
-    <div class="plan-label">Geselecteerd</div>
-    <div class="plan-name" id="inline-plan-name">Kies een abonnement</div>
-    <div class="plan-meta" id="inline-plan-meta"></div>
-  </div>
-
+<div class="membership-signup-form max-w-7xl mx-auto px-4 md:px-6">
+  
   <form id="membership-form" action="https://api.web3forms.com/submit" method="POST">
     <!-- Web3Forms Configuration -->
     <input type="hidden" name="access_key" value="7b91d16e-72f3-4c0e-a8cd-b6b9231807da" />
     <input type="hidden" name="redirect" value="/signup-success" />
     <input type="hidden" name="subject" value="Nieuwe Inschrijving - FitCity Culemborg" />
     <input type="hidden" name="from_name" value="FitCity Culemborg Website" />
+    <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
 
-    <!-- Selected membership (will be populated by JS) -->
+    <!-- Hidden Fields for Selection -->
     <input type="hidden" name="membership_id" id="selected-membership-id" />
     <input type="hidden" name="membership_name" id="selected-membership-name" />
     <input type="hidden" name="membership_price" id="selected-membership-price" />
     <input type="hidden" name="membership_term" id="selected-membership-term" />
 
-    <!-- Honeypot for bot detection -->
-    <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
+    <!-- STEP PROGRESS (Will be moved to Header via JS) -->
+    <div id="step-progress-template" class="hidden">
+        <div class="flex items-center gap-2">
+            <!-- Step 1 -->
+            <div class="step-badge active" data-step="1">
+                <span class="step-icon">1</span>
+                <span class="step-label">Kies lidmaatschap</span>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="step-badge" data-step="2">
+                <span class="step-icon">2</span>
+                <span class="step-label">Jouw gegevens</span>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="step-badge" data-step="3">
+                <span class="step-icon">3</span>
+                <span class="step-label">Betaling</span>
+            </div>
+        </div>
+    </div>
 
-    <!-- Step 1: Membership Selection -->
+    <!-- STEP 1: SELECT MEMBERSHIP -->
     <div class="form-step active" data-step="1">
-      <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">Kies je abonnement</h2>
-
-      <!-- 12-Month Memberships -->
-      <div class="mb-8">
-        <h3 class="font-display text-xl mb-4 text-primary">12-Maanden Abonnementen</h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pricingData.main.map((membership) => (
-            <button
-              type="button"
-              class="membership-card"
-              data-id={membership.id}
-              data-name={membership.name}
-              data-price={membership.price}
-              data-term={membership.term}
-            >
-              <div class="font-display text-xl mb-2">{membership.name}</div>
-              <div class="text-3xl font-display text-primary mb-2">€{membership.price}<span class="text-sm text-text-muted">/mnd</span></div>
-              <div class="text-sm text-text-muted mb-4">{membership.term}</div>
-              <ul class="text-left text-sm space-y-1">
-                {membership.features.map((feature) => (
-                  <li class="flex items-start gap-2">
-                    <svg class="w-4 h-4 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </button>
-          ))}
+      <h2 class="font-display text-2xl md:text-3xl mb-6 text-left">1. Kies Lidmaatschap</h2>
+      
+      <!-- Duration Toggle -->
+      <div class="duration-toggle-container mb-8">
+        <div class="duration-toggle">
+          <div class="slider-bg"></div>
+          <button type="button" class="duration-btn active" data-duration="12m">
+            Jaar
+          </button>
+          <button type="button" class="duration-btn" data-duration="6m">
+            Halfjaar
+          </button>
+          <button type="button" class="duration-btn" data-duration="flex">
+            Flex
+          </button>
         </div>
+        <p id="duration-explanation" class="text-sm text-text-muted mt-4 text-center">
+          Contract van 12 maanden. Daarna per maand opzegbaar
+        </p>
       </div>
 
-      <!-- Ladies Only -->
-      <div class="mb-8">
-        <h3 class="font-display text-xl mb-4 text-primary">Ladies Only</h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pricingData.ladies.map((membership) => (
-            <button
-              type="button"
-              class="membership-card"
-              data-id={membership.id}
-              data-name={membership.name}
-              data-price={membership.price}
-              data-term={membership.term}
-            >
-              <div class="font-display text-xl mb-2">{membership.name}</div>
-              <div class="text-3xl font-display text-primary mb-2">€{membership.price}<span class="text-sm text-text-muted">/mnd</span></div>
-              <div class="text-sm text-text-muted mb-4">{membership.term}</div>
-              <ul class="text-left text-sm space-y-1">
-                {membership.features.map((feature) => (
-                  <li class="flex items-start gap-2">
-                    <svg class="w-4 h-4 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </button>
-          ))}
-        </div>
+      <!-- CARDS VIEW -->
+      <div id="pricing-container">
+          <!-- 12 Months -->
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 duration-view active" id="view-12m">
+            {allPricing['12m'].map((m) => (
+              <PricingCard
+                name={m.name}
+                price={m.price}
+                term={m.term}
+                features={m.features}
+                isHighlighted={m.id === 'smart-deal'}
+                theme={m.id.includes('ladies') ? 'ladies' : m.id.includes('kb') ? 'kickboxing' : 'default'}
+                icons={getIcons(m.id)}
+                subtitle="€17,00 inschrijfkosten"
+              >
+                  <button type="button" class="select-btn btn-primary w-full text-center block select-text whitespace-nowrap px-0" data-id={m.id} data-name={m.name} data-price={m.price} data-term={m.term}>{formatButtonText(m.name)}</button>
+              </PricingCard>
+            ))}
+          </div>
+
+          <!-- 6 Months -->
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 duration-view" id="view-6m">
+            {allPricing['6m'].map((m) => (
+              <PricingCard
+                name={m.name}
+                price={m.price}
+                term={m.term}
+                features={m.features}
+                theme={m.id.includes('ladies') ? 'ladies' : m.id.includes('kb') ? 'kickboxing' : 'default'}
+                icons={getIcons(m.id)}
+                subtitle="€17,00 inschrijfkosten"
+              >
+                  <button type="button" class="select-btn btn-primary w-full text-center block select-text whitespace-nowrap px-0" data-id={m.id} data-name={m.name} data-price={m.price} data-term={m.term}>{formatButtonText(m.name)}</button>
+              </PricingCard>
+            ))}
+          </div>
+
+          <!-- Flex -->
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 duration-view" id="view-flex">
+            {allPricing['flex'].map((m) => (
+              <PricingCard
+                name={m.name}
+                price={m.price}
+                term={m.term}
+                features={m.features}
+                theme={m.id.includes('ladies') ? 'ladies' : m.id.includes('kb') ? 'kickboxing' : 'default'}
+                icons={getIcons(m.id)}
+                subtitle="€17,00 inschrijfkosten"
+              >
+                  <button type="button" class="select-btn btn-primary w-full text-center block select-text whitespace-nowrap px-0" data-id={m.id} data-name={m.name} data-price={m.price} data-term={m.term}>{formatButtonText(m.name)}</button>
+              </PricingCard>
+            ))}
+          </div>
       </div>
 
-      <!-- Kickboxing -->
-      <div class="mb-8">
-        <h3 class="font-display text-xl mb-4 text-primary">Kickboksen</h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pricingData.kickboxing.map((membership) => (
-            <button
-              type="button"
-              class="membership-card"
-              data-id={membership.id}
-              data-name={membership.name}
-              data-price={membership.price}
-              data-term={membership.term}
-            >
-              <div class="font-display text-xl mb-2">{membership.name}</div>
-              <div class="text-3xl font-display text-primary mb-2">€{membership.price}<span class="text-sm text-text-muted">/mnd</span></div>
-              <div class="text-sm text-text-muted mb-4">{membership.term}</div>
-              <ul class="text-left text-sm space-y-1">
-                {membership.features.map((feature) => (
-                  <li class="flex items-start gap-2">
-                    <svg class="w-4 h-4 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
 
-    <!-- Step 2: Personal Details -->
-    <div class="form-step" data-step="2">
-      <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">Persoonlijke gegevens</h2>
 
-      <div class="space-y-6">
-        <div>
-          <label for="full_name" class="block text-sm font-semibold mb-2">
-            Volledige naam <span class="text-primary">*</span>
-          </label>
-          <input
-            type="text"
-            name="full_name"
-            id="full_name"
-            required
-            class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-          />
-        </div>
+    <!-- STEP 2: PERSONAL DETAILS -->
+    <div class="form-step max-w-7xl mx-auto px-4" data-step="2">
+        <h2 class="font-display text-2xl md:text-3xl mb-8 text-left uppercase tracking-wider">2. Jouw gegevens</h2>
+        
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Form Fields -->
+            <div class="flex-grow space-y-6 w-full max-w-3xl">
+                <div>
+                    <label for="full_name" class="block text-sm font-semibold mb-2">
+                        Volledige naam <span class="text-primary">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="full_name"
+                        id="full_name"
+                        required
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                    />
+                </div>
+        
+                <div>
+                    <label for="email" class="block text-sm font-semibold mb-2">
+                        E-mail <span class="text-primary">*</span>
+                    </label>
+                    <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        required
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                    />
+                </div>
+        
+                <div>
+                    <label for="phone" class="block text-sm font-semibold mb-2">
+                        Telefoon <span class="text-primary">*</span>
+                    </label>
+                    <input
+                        type="tel"
+                        name="phone"
+                        id="phone"
+                        required
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                    />
+                </div>
+        
+                <div>
+                    <label for="birthdate" class="block text-sm font-semibold mb-2">
+                        Geboortedatum <span class="text-primary">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        name="birthdate"
+                        id="birthdate"
+                        required
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                    />
+                </div>
+        
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label for="address_street" class="block text-sm font-semibold mb-2">
+                        Straat <span class="text-primary">*</span>
+                        </label>
+                        <input
+                        type="text"
+                        name="address_street"
+                        id="address_street"
+                        required
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label for="address_number" class="block text-sm font-semibold mb-2">
+                        Huisnummer <span class="text-primary">*</span>
+                        </label>
+                        <input
+                        type="text"
+                        name="address_number"
+                        id="address_number"
+                        required
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                        />
+                    </div>
+                </div>
+        
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="address_postal" class="block text-sm font-semibold mb-2">
+                        Postcode <span class="text-primary">*</span>
+                        </label>
+                        <input
+                        type="text"
+                        name="address_postal"
+                        id="address_postal"
+                        required
+                        placeholder="1234 AB"
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label for="address_city" class="block text-sm font-semibold mb-2">
+                        Plaats <span class="text-primary">*</span>
+                        </label>
+                        <input
+                        type="text"
+                        name="address_city"
+                        id="address_city"
+                        required
+                        class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
+                        />
+                    </div>
+                </div>
+            </div>
 
-        <div>
-          <label for="email" class="block text-sm font-semibold mb-2">
-            E-mail <span class="text-primary">*</span>
-          </label>
-          <input
-            type="email"
-            name="email"
-            id="email"
-            required
-            class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-          />
-        </div>
+            <!-- RELOCATED ORDER SUMMARY -->
+            <div class="w-full lg:w-[380px] mt-8 lg:mt-0 h-full">
+                <div id="order-summary-tab" class="lg:sticky lg:top-24 opacity-0 hidden transition-opacity duration-300 z-30">
+                    <div class="bg-bg-secondary text-white shadow-xl rounded border border-white/10 overflow-hidden relative clip-path-ind">
+                        <!-- Collapsed Header -->
+                        <button type="button" id="summary-toggle" class="w-full p-6 flex justify-between items-center hover:bg-white/5 transition-colors">
+                            <div class="text-left">
+                                <h3 class="font-display text-lg uppercase tracking-tight" id="float-name">Lidmaatschap</h3>
+                                <div class="flex items-baseline gap-1 mt-0.5">
+                                    <span class="font-display text-2xl text-primary" id="float-price">€-</span>
+                                    <span class="text-xs text-text-muted font-medium">/ per 4 weken</span>
+                                </div>
+                            </div>
+                            <svg id="toggle-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-text-muted transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
-        <div>
-          <label for="phone" class="block text-sm font-semibold mb-2">
-            Telefoon <span class="text-primary">*</span>
-          </label>
-          <input
-            type="tel"
-            name="phone"
-            id="phone"
-            required
-            class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-          />
-        </div>
+                        <!-- Expanded Details -->
+                        <div id="summary-details" class="hidden border-t border-white/5 p-6 space-y-6">
+                            <div>
+                                <h4 class="font-display text-base uppercase mb-3 text-primary">Bestel Overzicht</h4>
+                                <div class="border-t border-dotted border-white/20 pt-3">
+                                    <div class="flex justify-between items-baseline mb-2">
+                                        <span class="font-bold text-sm">Lidmaatschap kosten</span>
+                                        <span class="font-display text-base" id="detail-price-head">€-</span>
+                                    </div>
+                                    <div class="text-xs text-text-muted space-y-1.5 pl-3 border-l-2 border-primary/30">
+                                        <div class="flex justify-between">
+                                            <span id="detail-name" class="font-medium text-white">-</span>
+                                            <span id="detail-price-row">€-</span>
+                                        </div>
+                                        <p id="detail-term-row">-</p>
+                                        <div class="flex justify-between pt-1">
+                                            <span>Startdatum:</span>
+                                            <span id="detail-start" class="text-white">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Einddatum:</span>
+                                            <span id="detail-end" class="text-white">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-        <div>
-          <label for="birthdate" class="block text-sm font-semibold mb-2">
-            Geboortedatum <span class="text-primary">*</span>
-          </label>
-          <input
-            type="date"
-            name="birthdate"
-            id="birthdate"
-            required
-            class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-          />
+                            <div class="space-y-3 pt-2">
+                                <div class="flex justify-between items-baseline">
+                                    <span class="font-bold text-sm uppercase tracking-wider">Betaal bij eerste bezoek</span>
+                                    <span class="font-display text-xl text-primary" id="now-total">€17,00</span>
+                                </div>
+                                <div class="text-xs text-text-muted space-y-1.5 pl-3 border-l-2 border-primary/30">
+                                    <div class="flex justify-between">
+                                        <span>Inschrijfkosten</span>
+                                        <span class="text-white">€17,00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="grid md:grid-cols-3 gap-4">
-          <div class="md:col-span-2">
-            <label for="address_street" class="block text-sm font-semibold mb-2">
-              Straat <span class="text-primary">*</span>
-            </label>
-            <input
-              type="text"
-              name="address_street"
-              id="address_street"
-              required
-              class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-            />
-          </div>
-          <div>
-            <label for="address_number" class="block text-sm font-semibold mb-2">
-              Huisnummer <span class="text-primary">*</span>
-            </label>
-            <input
-              type="text"
-              name="address_number"
-              id="address_number"
-              required
-              class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-            />
-          </div>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-4">
-          <div>
-            <label for="address_postal" class="block text-sm font-semibold mb-2">
-              Postcode <span class="text-primary">*</span>
-            </label>
-            <input
-              type="text"
-              name="address_postal"
-              id="address_postal"
-              required
-              placeholder="1234 AB"
-              class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-            />
-          </div>
-          <div>
-            <label for="address_city" class="block text-sm font-semibold mb-2">
-              Plaats <span class="text-primary">*</span>
-            </label>
-            <input
-              type="text"
-              name="address_city"
-              id="address_city"
-              required
-              class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label for="start_date" class="block text-sm font-semibold mb-2">
-            Gewenste startdatum <span class="text-primary">*</span>
-          </label>
-          <input
-            type="date"
-            name="start_date"
-            id="start_date"
-            required
-            class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-          />
-        </div>
-      </div>
     </div>
 
-    <!-- Step 3: Payment & Legal -->
-    <div class="form-step" data-step="3">
-      <h2 class="font-display text-2xl md:text-3xl mb-6 text-center">Betaalgegevens & akkoord</h2>
 
-      <div class="space-y-6">
-        <div>
-          <label for="iban" class="block text-sm font-semibold mb-2">
-            IBAN <span class="text-primary">*</span>
-          </label>
-          <input
-            type="text"
-            name="iban"
-            id="iban"
-            required
-            placeholder="NL00 BANK 0000 0000 00"
-            class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-          />
-        </div>
+    <!-- STEP 3: OVERVIEW & PAYMENT -->
+    <div class="form-step max-w-4xl px-4" data-step="3">
+      <h2 class="font-display text-2xl md:text-3xl mb-6 text-left">3. Rond je inschrijving af</h2>
+      <p class="text-left text-text-muted mb-8">Je bent nog één stap verwijderd van je eerste workout!</p>
 
-        <div>
-          <label for="account_holder" class="block text-sm font-semibold mb-2">
-            Naam rekeninghouder <span class="text-primary">*</span>
-          </label>
-          <input
-            type="text"
-            name="account_holder"
-            id="account_holder"
-            required
-            class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
-          />
-        </div>
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+          <!-- Subscription Summary -->
+          <div class="bg-bg-secondary p-6 rounded border border-white/5 relative clip-path-ind">
+              <h3 class="font-display text-xl mb-4">Jouw Abonnement</h3>
+              <div class="flex justify-between items-baseline mb-2">
+                  <span class="font-bold text-lg text-primary" id="summary-name">-</span>
+                  <span class="font-display text-xl" id="summary-price">-</span>
+              </div>
+              <div class="space-y-1 text-sm text-text-muted">
+                  <div class="flex justify-between">
+                      <span>Looptijd:</span>
+                      <span id="summary-term">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                      <span>Startdatum:</span>
+                      <span id="summary-start">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                      <span>Einddatum:</span>
+                      <span id="summary-end">-</span>
+                  </div>
+              </div>
+          </div>
 
-        <!-- Consent Checkboxes -->
-        <div class="space-y-4">
-          <label class="flex items-start gap-3 cursor-pointer">
+          <!-- Payment Summary -->
+          <div class="bg-bg-secondary p-6 rounded border border-white/5 relative clip-path-ind">
+               <h3 class="font-display text-xl mb-4">Betaal bij eerste bezoek</h3>
+               <div class="space-y-2 text-sm">
+                   <div class="flex justify-between">
+                       <span>Inschrijfkosten</span>
+                       <span>€17,00</span>
+                   </div>
+                   <div class="flex justify-between font-bold text-lg text-primary border-t border-white/10 pt-2 mt-2">
+                       <span>Totaal</span>
+                       <span>€17,00</span>
+                   </div>
+               </div>
+          </div>
+      </div>
+
+      <!-- Personal Details Review -->
+      <div class="mb-8">
+          <h3 class="font-display text-xl mb-4">Jouw gegevens</h3>
+          
+          <div class="bg-bg-secondary p-6 rounded border border-white/5 grid md:grid-cols-2 gap-6 relative">
+              <!-- Col 1 -->
+              <div class="space-y-1">
+                  <div class="flex justify-between items-start group">
+                      <div>
+                          <p id="review-name" class="font-semibold text-lg">-</p>
+                          <p id="review-dob" class="text-text-muted text-sm">-</p>
+                          <p id="review-email" class="text-text-muted text-sm">-</p>
+                          <p id="review-phone" class="text-text-muted text-sm">-</p>
+                      </div>
+                      <button type="button" class="text-primary text-sm hover:underline" onclick="openDrawer('personal')">Wijzigen</button>
+                  </div>
+              </div>
+
+              <!-- Col 2 -->
+              <div class="space-y-1 md:border-l md:border-white/10 md:pl-6">
+                   <div class="flex justify-between items-start group">
+                      <div>
+                          <p id="review-address" class="font-semibold">-</p>
+                          <p id="review-zipcity" class="text-text-muted text-sm">-</p>
+                      </div>
+                      <button type="button" class="text-primary text-sm hover:underline" onclick="openDrawer('address')">Wijzigen</button>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="mb-8">
+        <h3 class="font-display text-xl mb-2">IBAN</h3>
+        <p class="text-text-muted text-sm mb-4">We gebruiken je IBAN om je lidmaatschap veilig automatisch te kunnen incasseren.</p>
+        
+        <div class="space-y-4 bg-bg-secondary p-6 rounded border border-white/5">
+            <div>
+            <label for="account_holder" class="block text-sm font-semibold mb-2">
+                Naam rekeninghouder <span class="text-primary">*</span>
+            </label>
             <input
-              type="checkbox"
-              name="sepa_consent"
-              id="sepa_consent"
-              required
-              class="mt-1 w-5 h-5 border-2 border-text-muted/30 bg-bg-main focus:ring-primary"
+                type="text"
+                name="account_holder"
+                id="account_holder"
+                required
+                class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
             />
-            <span class="text-sm">
-              Ik geef toestemming voor automatische <a href="/sepa" target="_blank" class="text-primary hover:underline">SEPA-incasso</a> <span class="text-primary">*</span>
-            </span>
-          </label>
+            </div>
 
-          <label class="flex items-start gap-3 cursor-pointer">
+            <div>
+            <label for="iban" class="block text-sm font-semibold mb-2">
+                Rekeningnummer (IBAN) <span class="text-primary">*</span>
+            </label>
             <input
-              type="checkbox"
-              name="policy_consent"
-              id="policy_consent"
-              required
-              class="mt-1 w-5 h-5 border-2 border-text-muted/30 bg-bg-main focus:ring-primary"
+                type="text"
+                name="iban"
+                id="iban"
+                required
+                placeholder="NL00 BANK 0000 0000 00"
+                class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none transition-colors"
             />
-            <span class="text-sm">
-              Ik ga akkoord met de <a href="/terms" target="_blank" class="text-primary hover:underline">algemene voorwaarden</a> en heb de <a href="/privacy" target="_blank" class="text-primary hover:underline">privacyverklaring</a> gelezen <span class="text-primary">*</span>
-            </span>
-          </label>
+            </div>
+
+            <label class="flex items-start gap-3 cursor-pointer mt-4">
+                <input
+                type="checkbox"
+                name="sepa_consent"
+                id="sepa_consent"
+                required
+                />
+                <span class="text-sm">
+                Ik machtig hierbij automatische <a href="/sepa" target="_blank" class="text-primary hover:underline">SEPA-betalingen</a>.
+                </span>
+            </label>
+
+            <!-- Final Consent Moved Here -->
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="policy_consent"
+                  id="policy_consent"
+                  required
+                />
+                <span class="text-sm">
+                  Ik ga akkoord met de <a href="/terms" target="_blank" class="text-primary hover:underline">algemene voorwaarden</a> en heb de <a href="/privacy" target="_blank" class="text-primary hover:underline">privacyverklaring</a> gelezen <span class="text-primary">*</span>
+                </span>
+            </label>
         </div>
       </div>
+      
     </div>
+
+    <!-- MAIN ACTION BUTTON -->
+    <div class="mt-8 pt-6 border-t border-white/5 flex justify-start">
+        <button type="button" id="next-btn" class="btn-primary w-full md:w-auto min-w-[300px] text-lg py-4 relative group" disabled>
+            <span class="relative z-10 default-text">KIES EEN ABONNEMENT</span>
+            <span class="relative z-10 step2-text hidden">NAAR BETALING</span>
+            <span class="relative z-10 step3-text hidden">INSCHRIJVING VOLTOOIEN</span>
+        </button>
+    </div>
+
+
+
+
   </form>
 </div>
 
+<!-- EDIT DRAWER -->
+<div 
+    id="edit-drawer" 
+    class="fixed bg-bg-secondary shadow-2xl flex flex-col border-white/10 border-t md:border-t-0 md:border-l"
+>
+    <!-- Handle Removed -->
+
+    <div class="p-6 border-b border-white/10 flex justify-between items-center">
+        <h3 class="font-display text-xl" id="drawer-title">Gegevens wijzigen</h3>
+        <button type="button" id="close-drawer" class="text-text-muted hover:text-white p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+    <div class="p-6 overflow-y-auto flex-grow space-y-4" id="drawer-content">
+        <!-- Section: Personal -->
+        <div id="drawer-section-personal" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold mb-2">Volledige naam</label>
+                <input type="text" id="drawer-full_name" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-2">E-mail</label>
+                <input type="email" id="drawer-email" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-2">Telefoon</label>
+                <input type="tel" id="drawer-phone" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold mb-2">Geboortedatum</label>
+                <input type="date" id="drawer-birthdate" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+            </div>
+        </div>
+
+        <!-- Section: Address -->
+        <div id="drawer-section-address" class="space-y-4 hidden">
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold mb-2">Straat</label>
+                    <input type="text" id="drawer-address_street" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Nr</label>
+                    <input type="text" id="drawer-address_number" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Postcode</label>
+                    <input type="text" id="drawer-address_postal" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Plaats</label>
+                    <input type="text" id="drawer-address_city" class="w-full bg-bg-main border-2 border-text-muted/30 px-4 py-3 rounded-none focus:border-primary focus:outline-none" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="p-6 border-t border-white/10 bg-bg-secondary">
+        <button type="button" id="save-drawer" class="btn-primary w-full text-center py-3">OPSLAAN EN SLUITEN</button>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div id="drawer-overlay" class="fixed inset-0 bg-black/80 z-[50] hidden backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+
 <style>
-  .step-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    margin-bottom: 1.25rem;
-  }
+/* ... existing styles ... */
 
-  .step-progress {
-    flex: 1;
-    justify-content: center;
-  }
+/* CORE DRAWER STYLES */
+#edit-drawer {
+    z-index: 9999 !important;
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Mobile Defaults (Bottom Sheet) */
+    position: fixed;
+    left: 0; 
+    right: 0; 
+    bottom: 0;
+    height: 85vh;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    transform: translateY(100%);
+}
 
-  .step-nav {
-    min-width: 140px;
-  }
+#edit-drawer.open {
+    transform: translateY(0) !important;
+}
 
-  .selected-plan-inline {
-    background: var(--color-bg-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    margin-bottom: 1.5rem;
-  }
+/* Desktop Overrides (Side Drawer) */
+@media (min-width: 768px) {
+    #edit-drawer {
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: auto; /* reset mobile left key */
+        height: 100%;
+        width: 480px;
+        border-radius: 0;
+        transform: translateX(100%);
+        border-right: none;
+    }
 
-  .plan-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-text-muted);
-  }
+    #edit-drawer.open {
+        transform: translateX(0) !important;
+    }
+}
 
-  .plan-name {
-    color: var(--color-text-main);
-    font-weight: 700;
-  }
+#drawer-overlay {
+    z-index: 9990 !important;
+}
 
-  .plan-meta {
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-  }
-
-  .step-indicator {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--color-bg-secondary);
-    border: 2px solid var(--color-text-muted);
-    color: var(--color-text-muted);
-    font-weight: 700;
-    transition: all 0.3s;
-  }
-
-  .step-indicator.active {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-    color: var(--color-bg-main);
-  }
-
-  .step-indicator.completed {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-    color: var(--color-bg-main);
-  }
-
-  .step-line.active {
-    background-color: var(--color-primary);
-  }
-
-  .form-step {
-    display: none;
-  }
-
-  .form-step.active {
+#drawer-overlay.open {
     display: block;
-  }
+    opacity: 1;
+}
 
-  .membership-card {
-    padding: 24px;
-    background-color: var(--color-bg-secondary);
-    border: 2px solid var(--color-text-muted);
-    transition: all 0.3s;
-    text-align: center;
+.clip-path-ind {
+    clip-path: polygon(
+        0 0, 
+        100% 0, 
+        100% calc(100% - 15px), 
+        calc(100% - 15px) 100%, 
+        0 100%
+    );
+}
+
+/* TABS & TOGGLES */
+.category-tab {
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.category-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.category-tab:hover:not(.active) {
+  color: var(--color-text-main);
+}
+
+.duration-toggle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.duration-toggle {
+    display: inline-flex;
+    background: var(--color-bg-secondary);
+    border-radius: 9999px;
+    padding: 0.25rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.slider-bg {
+    position: absolute;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    left: 0;
+    height: calc(100% - 0.5rem);
+    background: var(--color-primary);
+    border-radius: 9999px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.duration-btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    transition: color 0.3s;
     cursor: pointer;
-  }
+    position: relative;
+    z-index: 1;
+    background: transparent !important;
+}
 
-  .membership-card:hover {
-    border-color: var(--color-primary);
-  }
+.duration-btn.active {
+    color: var(--color-bg-main);
+    /* Background handled by slider-bg */
+}
 
-  .membership-card.selected {
+/* SECTIONS & VIEWS */
+.category-section {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.category-section.active {
+    display: block;
+}
+
+.duration-view {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.duration-view.active {
+    display: grid;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* CARDS INDUSTRIAL STYLE (Matching PricingCard.astro) */
+.card-industrial.selected {
+    box-shadow: 0 0 0 4px var(--color-primary);
+    z-index: 10;
+}
+
+/* Steps in Header */
+.step-badge {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    background: transparent;
+    padding: 0 1rem;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    transition: all 0.3s;
+    border-radius: 4px;
+}
+
+/* No skew needed */
+.step-badge > * {
+    transform: none;
+}
+
+.step-badge .step-label {
+    display: none;
+    margin-left: 0.5rem;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+}
+
+/* COMPLETED STATE */
+.step-badge.completed {
+    background: var(--color-primary);
+    color: var(--color-bg-main); /* Dark checkmark/text */
+    width: 40px;
+    justify-content: center;
+    padding: 0;
+}
+.step-badge.completed .step-icon {
+    display: none; /* Hide number */
+}
+.step-badge.completed::after {
+    content: '✓';
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* ACTIVE STATE (Outlined/Styled with Label) */
+.step-badge.active {
+    border: 2px solid var(--color-primary);
+    color: white; /* or primary if you prefer outlined look */
+    background: transparent;
+}
+
+.step-badge.active .step-icon {
+    color: var(--color-primary); /* Number matches border */
+}
+
+/* FUTURE STATE (Default) */
+.step-badge:not(.active):not(.completed) {
+    background: rgba(255,255,255,0.05);
+}
+
+/* CUSTOM CHECKBOXES */
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: var(--color-bg-main);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 0.25rem; /* Slightly rounded squares */
+    cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-top: 0.2rem; /* alignment tweak */
+}
+
+input[type="checkbox"]:checked {
+    background-color: var(--color-primary);
     border-color: var(--color-primary);
-    box-shadow: 4px 4px 0px 0px var(--color-primary);
-    transform: translate(-2px, -2px);
-  }
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    color: var(--color-bg-main);
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: block;
+}
+
+input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+}
+
+.form-step {
+    display: none;
+}
+.form-step.active {
+    display: block;
+}
+
+@media (min-width: 768px) {
+    .step-badge.active .step-label {
+        display: inline-block;
+    }
+}
+
+.step-badge.active .step-icon {
+    color: var(--color-primary); /* Number matches border */
+}
+
+/* FUTURE STATE (Default) */
+.step-badge:not(.active):not(.completed) {
+    background: rgba(255,255,255,0.05);
+}
+
+
 </style>
 
 <script>
-  // Multi-step form logic
-  let currentStep: number = 1;
-  let selectedMembership: { id: string; name: string; price: string; term: string } | null = null;
+    // State
+    const state = {
+        step: 1,
+        duration: '12m',
+        selectedCard: null as HTMLButtonElement | null
+    };
 
-  const steps = document.querySelectorAll('.form-step');
-  const stepIndicators = document.querySelectorAll('.step-indicator');
-  const stepLines = document.querySelectorAll('.step-line');
-  const membershipCards = document.querySelectorAll('.membership-card');
-  const planName = document.getElementById('inline-plan-name') as HTMLElement | null;
-  const planMeta = document.getElementById('inline-plan-meta') as HTMLElement | null;
-  const inlinePlan = document.getElementById('selected-plan-inline') as HTMLElement | null;
-  const nextBtn = document.getElementById('step-next') as HTMLButtonElement | null;
-  const backBtn = document.getElementById('step-back') as HTMLButtonElement | null;
-  const form = document.getElementById('membership-form') as HTMLFormElement;
-  if (backBtn) backBtn.style.visibility = 'hidden';
+    // Elements
+    const form = document.getElementById('membership-form') as HTMLFormElement;
+    const durationBtns = document.querySelectorAll('.duration-btn');
+    const durationViews = document.querySelectorAll('.duration-view');
+    // Cards
+    // Cards
+    const membershipCards = document.querySelectorAll('.card-industrial');
+    const selectButtons = document.querySelectorAll('.select-btn');
+    const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
 
-  // Membership selection
-  membershipCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const htmlCard = card as HTMLButtonElement;
+    // ...
 
-      // Remove selection from all cards
-      membershipCards.forEach(c => c.classList.remove('selected'));
-
-      // Select this card
-      card.classList.add('selected');
-
-      // Store selection
-      selectedMembership = {
-        id: htmlCard.dataset.id || '',
-        name: htmlCard.dataset.name || '',
-        price: htmlCard.dataset.price || '',
-        term: htmlCard.dataset.term || ''
-      };
-
-      // Update hidden fields
-      const membershipIdField = document.getElementById('selected-membership-id') as HTMLInputElement;
-      const membershipNameField = document.getElementById('selected-membership-name') as HTMLInputElement;
-      const membershipPriceField = document.getElementById('selected-membership-price') as HTMLInputElement;
-      const membershipTermField = document.getElementById('selected-membership-term') as HTMLInputElement;
-
-      if (membershipIdField) membershipIdField.value = selectedMembership.id;
-      if (membershipNameField) membershipNameField.value = selectedMembership.name;
-      if (membershipPriceField) membershipPriceField.value = selectedMembership.price;
-      if (membershipTermField) membershipTermField.value = selectedMembership.term;
-      if (planName) planName.textContent = selectedMembership.name || 'Kies een abonnement';
-      if (planMeta) planMeta.textContent = selectedMembership.price ? `ƒ,ª${selectedMembership.price} / ${selectedMembership.term || 'mnd'}` : '';
-      if (inlinePlan) inlinePlan.hidden = false;
-      if (currentStep === 1 && nextBtn) nextBtn.disabled = false;
-    });
-  });
-
-  // Step navigation
-  function goToStep(step: number): void {
-    steps.forEach(s => s.classList.remove('active'));
-    steps[step - 1].classList.add('active');
-
-    stepIndicators.forEach((indicator, index) => {
-      indicator.classList.remove('active', 'completed');
-      if (index + 1 < step) {
-        indicator.classList.add('completed');
-      } else if (index + 1 === step) {
-        indicator.classList.add('active');
-      }
-    });
-
-    stepLines.forEach((line, index) => {
-      line.classList.remove('active');
-      if (index + 1 < step) {
-        line.classList.add('active');
-      }
-    });
-
-    currentStep = step;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (backBtn) backBtn.style.visibility = step === 1 ? 'hidden' : 'visible';
-    if (nextBtn) {
-      nextBtn.textContent = step === 3 ? 'ABONNEMENT AANVRAGEN' : 'VOLGENDE STAP';
-      nextBtn.disabled = step === 1 && !selectedMembership;
-    }
-  }
-
-  const handleNext = () => {
-    if (currentStep === 1) {
-      if (selectedMembership) goToStep(2);
-    } else if (currentStep === 2) {
-      const step2Inputs = form.querySelectorAll('[data-step="2"] input[required]');
-      let valid = true;
-      step2Inputs.forEach(input => {
-        if (!(input as HTMLInputElement).checkValidity()) {
-          valid = false;
-          (input as HTMLInputElement).reportValidity();
+    function selectCard(btn: HTMLButtonElement) {
+        // Deselect others
+        membershipCards.forEach(c => c.classList.remove('selected'));
+        
+        // Find parent card
+        const card = btn.closest('.card-industrial');
+        if (card) {
+            card.classList.add('selected');
         }
-      });
-      if (valid) goToStep(3);
-    } else if (currentStep === 3) {
-      form.requestSubmit();
-    }
-  };
+        state.selectedCard = btn; // Keep track of button if needed, or just truthiness
+        
+        // Update Hidden Inputs
+        hiddenInputs.id.value = btn.dataset.id || '';
+        hiddenInputs.name.value = btn.dataset.name || '';
+        hiddenInputs.price.value = btn.dataset.price || '';
+        hiddenInputs.term.value = btn.dataset.term || '';
 
-  const handleBack = () => {
-    if (currentStep > 1) {
-      goToStep(currentStep - 1);
-    }
-  };
-
-  nextBtn?.addEventListener('click', handleNext);
-  backBtn?.addEventListener('click', handleBack);
-
-  // IBAN Validation
-  function validateIBAN(iban: string): boolean {
-    // Remove spaces and convert to uppercase
-    iban = iban.replace(/\s/g, '').toUpperCase();
-
-    // Check basic format (2 letters, 2 digits, then alphanumeric)
-    if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/.test(iban)) {
-      return false;
+        // Auto-advance to Step 2
+        goToStep(2);
     }
 
-    // Check length (15-34 characters)
-    if (iban.length < 15 || iban.length > 34) {
-      return false;
+    // ...
+
+    // Event Listeners
+    selectButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            selectCard(btn as HTMLButtonElement);
+        });
+    });
+    const steps = document.querySelectorAll('.form-step');
+    const stepBadges = document.querySelectorAll('.step-badge');
+
+    // Drawer Elements
+    const drawer = document.getElementById('edit-drawer');
+    const drawerOverlay = document.getElementById('drawer-overlay');
+    const drawerCloseBtn = document.getElementById('close-drawer');
+    const drawerSaveBtn = document.getElementById('save-drawer');
+    const drawerContent = document.getElementById('drawer-content');
+    
+    // Portal Steps to Header
+    const stepTemplate = document.getElementById('step-progress-template');
+    const headerContainer = document.getElementById('header-step-indicator');
+    if (stepTemplate && headerContainer) {
+        headerContainer.innerHTML = stepTemplate.innerHTML;
+        stepTemplate.remove();
+    }
+    
+    // Inputs (Step 2)
+    const inputs = {
+        full_name: document.getElementById('full_name') as HTMLInputElement,
+        email: document.getElementById('email') as HTMLInputElement,
+        phone: document.getElementById('phone') as HTMLInputElement,
+        birthdate: document.getElementById('birthdate') as HTMLInputElement,
+        street: document.getElementById('address_street') as HTMLInputElement,
+        number: document.getElementById('address_number') as HTMLInputElement,
+        postal: document.getElementById('address_postal') as HTMLInputElement,
+        city: document.getElementById('address_city') as HTMLInputElement,
+        // Start date removed/auto-set
+    };
+
+    // Hidden Inputs (Step 1 Data)
+    const hiddenInputs = {
+        id: document.getElementById('selected-membership-id') as HTMLInputElement,
+        name: document.getElementById('selected-membership-name') as HTMLInputElement,
+        price: document.getElementById('selected-membership-price') as HTMLInputElement,
+        term: document.getElementById('selected-membership-term') as HTMLInputElement
+    };
+    
+    // Summary Elements (Step 3)
+    // ... no changes needed ...
+    const summaryEls = {
+        name: document.getElementById('summary-name'),
+        price: document.getElementById('summary-price'),
+        term: document.getElementById('summary-term'),
+        start: document.getElementById('summary-start'),
+        
+        // Personal Review
+        rName: document.getElementById('review-name'),
+        rDob: document.getElementById('review-dob'),
+        rEmail: document.getElementById('review-email'),
+        rPhone: document.getElementById('review-phone'),
+        rAddress: document.getElementById('review-address'),
+        rZipCity: document.getElementById('review-zipcity'),
+
+        // Floating Summary
+        fName: document.getElementById('float-name'),
+        fPrice: document.getElementById('float-price'),
+        dPriceHead: document.getElementById('detail-price-head'),
+        dName: document.getElementById('detail-name'),
+        dPriceRow: document.getElementById('detail-price-row'),
+        dTermRow: document.getElementById('detail-term-row'),
+        dStart: document.getElementById('detail-start'),
+        dEnd: document.getElementById('detail-end'),
+        yTotal: document.getElementById('yearly-total'),
     }
 
-    // For Dutch IBAN (NL), check if it's exactly 18 characters
-    if (iban.startsWith('NL') && iban.length !== 18) {
-      return false;
-    }
+    // --- LOGIC ---
 
-    // Mod-97 checksum validation (standard IBAN validation)
-    const rearranged = iban.slice(4) + iban.slice(0, 4);
-    const numericString = rearranged.replace(/[A-Z]/g, (char) => {
-      return (char.charCodeAt(0) - 55).toString();
+    function updateView() {
+        // 1. Update Duration Toggles
+        durationBtns.forEach(btn => {
+            const dur = (btn as HTMLElement).dataset.duration;
+            if (dur === state.duration) {
+                btn.classList.add('active');
+                
+                // Move Slider
+                const slider = document.querySelector('.slider-bg') as HTMLElement;
+                const targetBtn = btn as HTMLElement;
+                if (slider && targetBtn) {
+                    slider.style.width = `${targetBtn.offsetWidth}px`;
+                    // Calculate left offset relative to parent
+                    slider.style.transform = `translateX(${targetBtn.offsetLeft}px)`;
+                }
+
+            }
+            else btn.classList.remove('active');
+        });
+
+        // 2. Show Duration Views
+        durationViews.forEach(view => {
+            view.classList.remove('active');
+        });
+
+        const activeView = document.getElementById(`view-${state.duration}`);
+        if (activeView) activeView.classList.add('active');
+
+        // 3. Update Explanation Text
+        const explanationEl = document.getElementById('duration-explanation');
+        const explanations: Record<string, string> = {
+            '12m': 'Contract van 12 maanden. Daarna per maand opzegbaar',
+            '6m': 'Contract van 6 maanden. Daarna per maand opzegbaar',
+            'flex': 'Op elk moment opzegbaar met een opzegtermijn van één maand'
+        };
+        if (explanationEl) {
+            explanationEl.textContent = explanations[state.duration] || '';
+        }
+
+        // 4. Update Button State
+        updateButtonState();
+    }
+    
+    // Add Resize Listener for Slider
+    window.addEventListener('resize', () => {
+        // Debounce slightly or just call updateView
+        requestAnimationFrame(updateView);
     });
 
-    // Calculate mod 97
-    let remainder = numericString.slice(0, 2);
-    for (let i = 2; i < numericString.length; i += 7) {
-      remainder = (parseInt(remainder + numericString.slice(i, i + 7)) % 97).toString();
+
+    
+    function updateButtonState() {
+        if (!nextBtn) return;
+        const btnTextDef = nextBtn.querySelector('.default-text');
+        const btnText2 = nextBtn.querySelector('.step2-text');
+        const btnText3 = nextBtn.querySelector('.step3-text');
+
+        btnTextDef?.classList.add('hidden');
+        btnText2?.classList.add('hidden');
+        btnText3?.classList.add('hidden');
+
+        // Hide main button on Step 1 (selection is auto)
+        if (state.step === 1) {
+            nextBtn.classList.add('hidden');
+        }
+        else if (state.step === 2) {
+            nextBtn.classList.remove('hidden');
+            btnText2?.classList.remove('hidden');
+            nextBtn.disabled = false;
+        }
+        else if (state.step === 3) {
+            nextBtn.classList.remove('hidden');
+            btnText3?.classList.remove('hidden');
+            nextBtn.disabled = false;
+        }
     }
 
-    return parseInt(remainder) === 1;
-  }
+    function updateSummary() {
+        // Plan Info
+        if (summaryEls.name) summaryEls.name.textContent = hiddenInputs.name.value;
+        if (summaryEls.price) summaryEls.price.textContent = `€${hiddenInputs.price.value} / maand`;
+        if (summaryEls.term) summaryEls.term.textContent = hiddenInputs.term.value;
+        
+        // Date Info: Start Today
+        const start = new Date();
+        if (summaryEls.start) summaryEls.start.textContent = start.toLocaleDateString('nl-NL');
+        
+        // End date = Start + 1 year
+        const end = new Date(start);
+        end.setFullYear(end.getFullYear() + 1);
+        if (document.getElementById('summary-end')) document.getElementById('summary-end')!.textContent = end.toLocaleDateString('nl-NL');
 
-  // Auto-format IBAN as user types
-  const ibanInput = document.getElementById('iban') as HTMLInputElement;
-  ibanInput?.addEventListener('input', (e) => {
-    const input = e.target as HTMLInputElement;
-    let value = input.value.replace(/\s/g, '').toUpperCase();
+        // Personal Info
+        if (summaryEls.rName) summaryEls.rName.textContent = inputs.full_name.value;
+        if (summaryEls.rDob) summaryEls.rDob.textContent = inputs.birthdate.value;
+        if (summaryEls.rEmail) summaryEls.rEmail.textContent = inputs.email.value;
+        if (summaryEls.rPhone) summaryEls.rPhone.textContent = inputs.phone.value;
+        
+        if (summaryEls.rAddress) summaryEls.rAddress.textContent = `${inputs.street.value} ${inputs.number.value}`;
+        if (summaryEls.rZipCity) summaryEls.rZipCity.textContent = `${inputs.postal.value} ${inputs.city.value}`;
 
-    // Add space every 4 characters for readability
-    value = value.match(/.{1,4}/g)?.join(' ') || value;
+        // FLOAT SUMMARY UPDATE
+        if (summaryEls.fName) summaryEls.fName.textContent = hiddenInputs.name.value;
+        if (summaryEls.fPrice) summaryEls.fPrice.textContent = `€${hiddenInputs.price.value}`;
+        if (summaryEls.dPriceHead) summaryEls.dPriceHead.textContent = `€${hiddenInputs.price.value}`;
+        if (summaryEls.dName) summaryEls.dName.textContent = hiddenInputs.name.value;
+        if (summaryEls.dPriceRow) summaryEls.dPriceRow.textContent = `€${hiddenInputs.price.value}`;
+        if (summaryEls.dTermRow) summaryEls.dTermRow.textContent = hiddenInputs.term.value;
+        
+        if (summaryEls.dStart) summaryEls.dStart.textContent = start.toLocaleDateString('nl-NL');
+        if (summaryEls.dEnd) summaryEls.dEnd.textContent = end.toLocaleDateString('nl-NL');
 
-    input.value = value;
-  });
+        // Yearly calc: 12 * price + 17 registration
+        const numericPrice = parseFloat(hiddenInputs.price.value.replace(',', '.'));
+        const yearly = (numericPrice * 12) + 17;
+        if (summaryEls.yTotal) summaryEls.yTotal.textContent = `€${yearly.toFixed(2).replace('.', ',')}`;
 
-  // Validate IBAN on blur
-  ibanInput?.addEventListener('blur', (e) => {
-    const input = e.target as HTMLInputElement;
-    const iban = input.value.replace(/\s/g, '');
-
-    if (iban && !validateIBAN(iban)) {
-      input.setCustomValidity('Voer een geldig IBAN nummer in');
-      input.reportValidity();
-    } else {
-      input.setCustomValidity('');
+        // Show/Hide Floating Summary (Only Step 2)
+        const floatSummary = document.getElementById('order-summary-tab');
+        if (floatSummary) {
+            if (state.step === 2 && hiddenInputs.id.value) {
+                floatSummary.classList.remove('hidden');
+                // Force reflow for transition
+                void floatSummary.offsetWidth;
+                floatSummary.classList.remove('opacity-0');
+            } else {
+                floatSummary.classList.add('opacity-0');
+                setTimeout(() => {
+                    if (state.step !== 2) floatSummary.classList.add('hidden');
+                }, 300);
+            }
+        }
     }
-  });
 
-  // Form submission
-  document.getElementById('membership-form')?.addEventListener('submit', (e) => {
-    const form = e.target as HTMLFormElement;
-    const ibanInput = document.getElementById('iban') as HTMLInputElement;
-    const iban = ibanInput.value.replace(/\s/g, '');
+    function goToStep(stepNum: number) {
+        // Validate before moving forward
+        if (stepNum > state.step) {
+             if (state.step === 2) {
+                 const step2Inputs = document.querySelectorAll('[data-step="2"] input[required]');
+                 let valid = true;
+                 step2Inputs.forEach(input => {
+                    if (!(input as HTMLInputElement).checkValidity()) {
+                        valid = false;
+                        (input as HTMLInputElement).reportValidity();
+                    }
+                 });
+                 if (!valid) return;
+             }
+        }
 
-    // Final IBAN validation before submit
-    if (!validateIBAN(iban)) {
-      e.preventDefault();
-      ibanInput.setCustomValidity('Voer een geldig IBAN nummer in');
-      ibanInput.reportValidity();
-      return false;
+        steps.forEach(s => s.classList.remove('active'));
+        const target = document.querySelector(`.form-step[data-step="${stepNum}"]`);
+        
+        if (target) {
+            target.classList.add('active');
+            state.step = stepNum;
+            
+            updateSummary();
+
+            // Update Indicators (in header)
+            // Note: Re-selecting badges here in case they were moved
+            const currentBadges = document.querySelectorAll('.step-badge'); 
+            currentBadges.forEach((badge, idx) => {
+                const s = idx + 1;
+                
+                // Reset classes
+                badge.classList.remove('active', 'completed');
+                // Remove existing click listeners to prevent duplicates (cloning replacement is cleaner)
+                const newBadge = badge.cloneNode(true) as HTMLElement;
+                badge.parentNode?.replaceChild(newBadge, badge);
+                
+                if (s < stepNum) {
+                    // Completed steps
+                    newBadge.classList.add('completed');
+                    // Add Click to Go Back
+                    newBadge.style.cursor = 'pointer';
+                    newBadge.addEventListener('click', () => goToStep(s));
+                } else if (s === stepNum) {
+                    // Current step
+                    newBadge.classList.add('active');
+                    newBadge.style.cursor = 'default';
+                } else {
+                    newBadge.style.cursor = 'default';
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateButtonState();
+        }
     }
 
-    // Show loading state
-    const submitBtn = nextBtn;
-    if (submitBtn) {
-      submitBtn.textContent = 'BEZIG MET VERZENDEN...';
-      submitBtn.disabled = true;
+    // --- DRAWER LOGIC ---
+    // Move to body to avoid stacking context issues
+    if (drawer && drawerOverlay && drawer.parentElement !== document.body) {
+        document.body.appendChild(drawerOverlay);
+        document.body.appendChild(drawer);
     }
 
-    // Form will submit naturally to Web3Forms
-  });
+    // Make explicit for TS and Access
+    (window as any).openDrawer = (type: string) => {
+        if (!drawer || !drawerOverlay) {
+            console.error('Drawer elements not found');
+            return;
+        }
+
+        // 1. Toggle Sections based on type
+        const pSec = document.getElementById('drawer-section-personal');
+        const aSec = document.getElementById('drawer-section-address');
+        const title = document.getElementById('drawer-title');
+
+        if (type === 'address') {
+            if (pSec) pSec.classList.add('hidden');
+            if (aSec) aSec.classList.remove('hidden');
+            if (title) title.textContent = 'Adres wijzigen';
+        } else {
+            // Default: Personal
+            if (pSec) pSec.classList.remove('hidden');
+            if (aSec) aSec.classList.add('hidden');
+            if (title) title.textContent = 'Gegevens wijzigen';
+        }
+        
+        // 2. Populate Drawer inputs with current values
+        const fields = [
+            'full_name', 'email', 'phone', 'birthdate', 
+            'address_street', 'address_number', 'address_postal', 'address_city'
+        ];
+        
+        fields.forEach(f => {
+            const dInput = document.getElementById(`drawer-${f}`) as HTMLInputElement;
+            const origin = document.getElementById(f) as HTMLInputElement;
+            
+            if (dInput && origin) {
+                dInput.value = origin.value;
+            }
+        });
+
+        // Open
+        drawer.classList.add('open');
+        drawerOverlay.classList.remove('hidden');
+        // Force reflow
+        void drawerOverlay.offsetWidth;
+        drawerOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden'; // Prevent bg scrolling
+    };
+
+    function closeDrawer() {
+        if (!drawer || !drawerOverlay) return;
+        drawer.classList.remove('open');
+        drawerOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+        
+        setTimeout(() => {
+            drawerOverlay.classList.add('hidden');
+        }, 300);
+    }
+    
+    function saveDrawer() {
+         const fields = [
+            'full_name', 'email', 'phone', 'birthdate', 
+            'address_street', 'address_number', 'address_postal', 'address_city'
+        ];
+        
+        fields.forEach(f => {
+            const dInput = document.getElementById(`drawer-${f}`) as HTMLInputElement;
+            const origin = document.getElementById(f) as HTMLInputElement;
+            if (dInput && origin) {
+                origin.value = dInput.value;
+            }
+        });
+        
+        updateSummary();
+        closeDrawer();
+    }
+
+    // --- EVENT LISTENERS ---
+
+    // Durations
+    durationBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.duration = (btn as HTMLElement).dataset.duration || '12m';
+            updateView();
+        });
+    });
+
+
+
+    // Main Button
+    nextBtn.addEventListener('click', () => {
+        if (state.step === 1) {
+            if (state.selectedCard) goToStep(2);
+        } else if (state.step === 2) {
+             goToStep(3);
+        } else if (state.step === 3) {
+             // IBAN Validation
+             const ibanInput = document.getElementById('iban') as HTMLInputElement;
+             if (!validateIBAN(ibanInput.value)) {
+                 ibanInput.setCustomValidity('Ongeldig IBAN nummer');
+                 ibanInput.reportValidity();
+                 return;
+             }
+             
+             // Submit
+             nextBtn.disabled = true;
+             nextBtn.textContent = 'BEZIG...';
+             form.requestSubmit();
+        }
+    });
+    
+    // Drawer Listeners
+    drawerCloseBtn?.addEventListener('click', closeDrawer);
+    drawerOverlay?.addEventListener('click', closeDrawer);
+    drawerSaveBtn?.addEventListener('click', saveDrawer);
+
+    // IBAN Util
+    function validateIBAN(iban: string): boolean {
+        iban = iban.replace(/\s/g, '').toUpperCase();
+        if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/.test(iban)) return false;
+        if (iban.length < 15 || iban.length > 34) return false;
+        if (iban.startsWith('NL') && iban.length !== 18) return false;
+        // Mod 97 check...
+        const rearranged = iban.slice(4) + iban.slice(0, 4);
+        const numeric = rearranged.replace(/[A-Z]/g, c => (c.charCodeAt(0) - 55).toString());
+        let remainder = numeric.slice(0, 2);
+        for (let i = 2; i < numeric.length; i += 7) {
+            remainder = (parseInt(remainder + numeric.slice(i, i + 7)) % 97).toString();
+        }
+        return parseInt(remainder) === 1;
+    }
+    
+    // Auto-format IBAN
+     const ibanInput = document.getElementById('iban') as HTMLInputElement;
+     ibanInput?.addEventListener('input', (e) => {
+        let v = (e.target as HTMLInputElement).value.replace(/\s/g, '').toUpperCase();
+        (e.target as HTMLInputElement).value = v.match(/.{1,4}/g)?.join(' ') || v;
+     });
+
+    // Auto-format Postal Code (NL: 1234 AB)
+    const postalInput = document.getElementById('address_postal') as HTMLInputElement;
+    postalInput?.addEventListener('input', (e) => {
+        let v = (e.target as HTMLInputElement).value.replace(/\s/g, '').toUpperCase();
+        if (v.length > 4) {
+            v = v.slice(0, 4) + ' ' + v.slice(4, 6);
+        } else {
+            v = v.slice(0, 6);
+        }
+        (e.target as HTMLInputElement).value = v;
+    });
+
+    // Init
+    updateView();
+
+    // Summary Toggle Logic
+    const toggleBtn = document.getElementById('summary-toggle');
+    const detailsDiv = document.getElementById('summary-details');
+    const toggleIcon = document.getElementById('toggle-icon');
+
+    toggleBtn?.addEventListener('click', () => {
+        const isHidden = detailsDiv?.classList.contains('hidden');
+        if (isHidden) {
+            detailsDiv?.classList.remove('hidden');
+            toggleIcon?.classList.add('rotate-180');
+        } else {
+            detailsDiv?.classList.add('hidden');
+            toggleIcon?.classList.remove('rotate-180');
+        }
+    });
+
+    // Deep-linking: check for plan in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const planId = urlParams.get('plan');
+    if (planId) {
+        // Find the button with this ID
+        const targetBtn = document.querySelector(`.select-btn[data-id="${planId}"]`) as HTMLButtonElement;
+        if (targetBtn) {
+            // Determine duration category from the plan
+            // (Standard fitness: smart-deal, fit-deal, combi-deal, ultimate-fit, etc.)
+            // We can check which view contains the button
+            const parentView = targetBtn.closest('.duration-view');
+            if (parentView && parentView.id) {
+                state.duration = parentView.id.replace('view-', '');
+                updateView();
+            }
+            
+            // Auto-select
+            selectCard(targetBtn);
+        }
+    }
+
 </script>

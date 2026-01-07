@@ -1,24 +1,16 @@
 ---
-import BaseLayout from '@layouts/BaseLayout.astro';
-import Container from '@components/ui/Container.astro';
+import SalesLayout from '@layouts/SalesLayout.astro';
+
 import MembershipSignupForm from '@components/forms/MembershipSignupForm.astro';
 ---
 
-<BaseLayout
+<SalesLayout
   title="Word Lid"
   description="Meld je aan voor een lidmaatschap bij FitCity Culemborg."
-  showStickyBar={false}
 >
   <section class="py-16 md:py-24 min-h-screen">
-    <Container size="narrow">
-      <div class="text-center mb-12">
-        <h1 class="font-display text-4xl md:text-6xl mb-4">WORD NU LID</h1>
-        <p class="text-sm text-text-muted mt-2">
-          Alle abonnementen inclusief ƒ,ª17,00 eenmalige inschrijfkosten (te betalen bij je eerste bezoek)
-        </p>
-      </div>
-
-      <MembershipSignupForm />
-    </Container>
+    <div class="z-10 relative">
+      <MembershipSignupForm client:load />
+    </div>
   </section>
-</BaseLayout>
+</SalesLayout>
