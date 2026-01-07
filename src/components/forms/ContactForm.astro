@@ -126,7 +126,7 @@ const { accessKey } = Astro.props;
           input.classList.remove('border-red-500');
           if (errorEl) errorEl.classList.add('hidden');
           
-          if ((input as HTMLInputElement).checkValidity() === false) {
+          if (input.checkValidity() === false) {
               isValid = false;
               input.classList.add('border-red-500');
               if (errorEl) {
