@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import OpenStatusBadge from './OpenStatusBadge.astro';
-import logoWebp from '../../../public/images/fitcity-logov2.webp';
+import logo from '../../../public/images/fitcity-logov2.png';
 
 interface Props {
   theme?: 'default' | 'ladies';
@@ -16,7 +16,7 @@ const { theme: _theme = 'default' } = Astro.props;
     <div class="flex items-center justify-between">
       <!-- Logo -->
       <a href="/" class="flex items-center">
-        <Image src={logoWebp} alt="FitCity Culemborg" class="h-12 md:h-14 w-auto" loading="eager" fetchpriority="high" inferSize width={140} height={52} />
+        <Image src={logo} alt="FitCity Culemborg" class="h-12 md:h-14 w-auto" loading="eager" fetchpriority="high" inferSize />
       </a>
 
       <!-- Desktop Navigation -->
