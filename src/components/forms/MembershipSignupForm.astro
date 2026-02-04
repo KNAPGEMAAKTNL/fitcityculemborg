@@ -35,7 +35,7 @@ function getIcons(id: string): ("fitness" | "kickboxing" | "ladies")[] {
   <form id="membership-form" action="https://api.web3forms.com/submit" method="POST">
     <!-- Web3Forms Configuration -->
     <input type="hidden" name="access_key" value="7b91d16e-72f3-4c0e-a8cd-b6b9231807da" />
-    <input type="hidden" name="redirect" value="/signup-success" />
+    <input type="hidden" name="redirect" value="/signup-success/" />
     <input type="hidden" name="subject" value="Nieuwe Inschrijving - FitCity Culemborg" />
     <input type="hidden" name="from_name" value="FitCity Culemborg Website" />
     <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
@@ -457,7 +457,7 @@ function getIcons(id: string): ("fitness" | "kickboxing" | "ladies")[] {
                 required
                 />
                 <span class="text-sm">
-                Ik machtig hierbij automatische <a href="/sepa" target="_blank" class="text-primary hover:underline">SEPA-betalingen</a>.
+                Ik machtig hierbij automatische <a href="/sepa/" target="_blank" class="text-primary hover:underline">SEPA-betalingen</a>.
                 </span>
             </label>
 
@@ -470,7 +470,7 @@ function getIcons(id: string): ("fitness" | "kickboxing" | "ladies")[] {
                   required
                 />
                 <span class="text-sm">
-                  Ik ga akkoord met de <a href="/terms" target="_blank" class="text-primary hover:underline">algemene voorwaarden</a> en heb de <a href="/privacy" target="_blank" class="text-primary hover:underline">privacyverklaring</a> gelezen <span class="text-primary">*</span>
+                  Ik ga akkoord met de <a href="/terms/" target="_blank" class="text-primary hover:underline">algemene voorwaarden</a> en heb de <a href="/privacy/" target="_blank" class="text-primary hover:underline">privacyverklaring</a> gelezen <span class="text-primary">*</span>
                 </span>
             </label>
         </div>
@@ -1396,7 +1396,7 @@ input[type="checkbox"]:focus {
                      sessionStorage.setItem('fitcity_signup_data', JSON.stringify(sessionData));
                      
                      // Redirect
-                     window.location.href = '/signup/success';
+                     window.location.href = '/signup/success/';
                  } else {
                      console.log(response);
                      alert('Er ging iets mis. Probeer het later opnieuw. ' + (result.message || ''));

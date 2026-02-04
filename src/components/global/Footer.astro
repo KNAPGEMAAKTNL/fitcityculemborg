@@ -58,7 +58,7 @@ import { locations } from '@data/locations';
         <ul class="space-y-2 text-sm">
           {locations.map(loc => (
             <li>
-              <a href={`/fitness-${loc.slug}`} class="text-text-muted hover:text-primary transition-colors">
+              <a href={`/fitness-${loc.slug}/`} class="text-text-muted hover:text-primary transition-colors">
                 Fitness {loc.name}
               </a>
             </li>
@@ -71,9 +71,9 @@ import { locations } from '@data/locations';
         <h3 class="font-display text-lg mb-4">LINKS</h3>
         <ul class="space-y-2 text-sm">
           <li><a href="/#pricing" class="text-text-muted hover:text-primary transition-colors">Prijzen</a></li>
-          <li><a href="/ladies-only" class="text-text-muted hover:text-primary transition-colors">Ladies Only</a></li>
-          <li><a href="/kickboxing" class="text-text-muted hover:text-primary transition-colors">Kickboxing</a></li>
-          <li><a href="/contact" class="text-text-muted hover:text-primary transition-colors">Contact</a></li>
+          <li><a href="/ladies-only/" class="text-text-muted hover:text-primary transition-colors">Ladies Only</a></li>
+          <li><a href="/kickboxing/" class="text-text-muted hover:text-primary transition-colors">Kickboxing</a></li>
+          <li><a href="/contact/" class="text-text-muted hover:text-primary transition-colors">Contact</a></li>
         </ul>
       </div>
 
@@ -87,9 +87,9 @@ import { locations } from '@data/locations';
       </div>
       
       <div class="flex flex-wrap justify-center gap-4 md:gap-6">
-        <a href="/privacy" class="hover:text-primary transition-colors">Privacy Policy</a>
-        <a href="/terms" class="hover:text-primary transition-colors">Algemene Voorwaarden</a>
-        <a href="/sitemap" class="hover:text-primary transition-colors">Sitemap</a>
+        <a href="/privacy/" class="hover:text-primary transition-colors">Privacy Policy</a>
+        <a href="/terms/" class="hover:text-primary transition-colors">Algemene Voorwaarden</a>
+        <a href="/sitemap/" class="hover:text-primary transition-colors">Sitemap</a>
       </div>
     </div>
   </div>
