@@ -6,20 +6,20 @@ import { locations } from '@data/locations';
 
 const mainPages = [
   { title: 'Home', href: '/' },
-  { title: 'Ladies Only', href: '/ladies-only' },
-  { title: 'Kickboksen', href: '/kickboxing' },
-  { title: 'Lid Worden', href: '/signup' },
-  { title: 'Contact', href: '/contact' },
+  { title: 'Ladies Only', href: '/ladies-only/' },
+  { title: 'Kickboksen', href: '/kickboxing/' },
+  { title: 'Lid Worden', href: '/signup/' },
+  { title: 'Contact', href: '/contact/' },
 ];
 
 const legalPages = [
-  { title: 'Algemene Voorwaarden', href: '/terms' },
-  { title: 'Privacyverklaring', href: '/privacy' },
-  { title: 'SEPA Incassomachtiging', href: '/sepa' },
+  { title: 'Algemene Voorwaarden', href: '/terms/' },
+  { title: 'Privacyverklaring', href: '/privacy/' },
+  { title: 'SEPA Incassomachtiging', href: '/sepa/' },
 ];
 
 const otherPages = [
-  { title: 'Success', href: '/success' },
+  { title: 'Success', href: '/success/' },
 ];
 ---
 
@@ -59,8 +59,8 @@ const otherPages = [
           <ul class="space-y-3">
             {locations.map((location) => (
               <li>
-                <a 
-                  href={`/fitness-${location.slug}`}
+                <a
+                  href={`/fitness-${location.slug}/`}
                   class="text-text-muted hover:text-primary transition-colors duration-300 flex items-center gap-2"
                 >
                   <span class="text-primary/50">›</span>

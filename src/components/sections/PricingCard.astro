@@ -111,7 +111,7 @@ const iconsMap: Record<string, IconConfig> = {
   </ul>
 
   <slot>
-    <a href={`/signup${id ? `?plan=${id}` : ''}`} class="btn-primary w-full text-center">
+    <a href={`/signup/${id ? `?plan=${id}` : ''}`} class="btn-primary w-full text-center">
       KIES {name.toUpperCase()}
     </a>
   </slot>
